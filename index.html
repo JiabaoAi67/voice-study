@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voice Comparison Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap">
+<style>
+:root{
+  --ground:#F1F3F2; --surface:#FBFCFB; --sunk:#E5E9E7; --ink:#16201C; --muted:#5D6A65; --rule:#D3DAD7;
+  --a:#17666F; --b:#A55B1E; --neutral:#7E8984; --on-accent:#FFFFFF; --focus:#2B59C3; --ok:#2F7A3E; --warn:#94620A;
+  --sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --ground:#0F1513; --surface:#17201D; --sunk:#111916; --ink:#E3EAE7; --muted:#97A49F; --rule:#2A3531;
+    --a:#5DB0B9; --b:#D99A5C; --neutral:#8E9A95; --on-accent:#0F1513; --focus:#8FB0FF; --ok:#7CC48A; --warn:#E0B24F; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.6 var(--sans)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--rule);background:var(--surface)}
+.top b{font-weight:600;letter-spacing:.01em}
+.top .step{font:500 13px var(--mono);color:var(--muted)}
+.meter{height:3px;background:var(--sunk)} .meter i{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
+main{max-width:780px;margin:0 auto;padding:36px 24px 72px;display:flex;flex-direction:column;gap:22px}
+h1{margin:0;font-size:30px;line-height:1.2;font-weight:600;text-wrap:balance}
+h2{margin:0;font-size:21px;font-weight:600;text-wrap:balance}
+p,li{margin:0;max-width:64ch;color:var(--muted)} p strong,li strong{color:var(--ink);font-weight:600}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:24px 26px;display:flex;flex-direction:column;gap:16px}
+.banner{padding:10px 14px;border-radius:6px;border:1px solid var(--warn);color:var(--warn);font-size:14px}
+.btn{align-self:flex-start;border:1px solid var(--ink);background:var(--ink);color:var(--surface);border-radius:6px;padding:10px 20px;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.check{display:flex;gap:10px;align-items:flex-start;color:var(--ink)} .check input{margin-top:5px;width:18px;height:18px}
+.script{margin:0;font:400 26px/1.4 var(--serif);color:var(--ink);text-wrap:balance}
+.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.player{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--rule);border-radius:7px;background:var(--surface)}
+.player.a{border:2px solid var(--a)} .player.b{border:2px solid var(--b)}
+.play{display:flex;align-items:center;gap:10px;border:0;border-radius:6px;padding:8px 14px 8px 12px;cursor:pointer;background:var(--ink);color:var(--surface);font-weight:600;min-width:112px}
+.player.a .play{background:var(--a);color:var(--on-accent)} .player.b .play{background:var(--b);color:var(--on-accent)}
+.glyph{width:0;height:0;border-style:solid;border-width:6px 0 6px 10px;border-color:transparent transparent transparent currentColor}
+.playing .glyph{width:10px;height:12px;border:0;border-left:3px solid currentColor;border-right:3px solid currentColor}
+.bar{height:4px;border-radius:2px;background:var(--sunk);overflow:hidden} .bar i{display:block;height:100%;width:0;background:var(--ink)}
+.player.a .bar i{background:var(--a)} .player.b .bar i{background:var(--b)}
+.heard{font-size:13px;color:var(--muted);white-space:nowrap} .heard.yes{color:var(--ok)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.reference{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:7px;background:var(--sunk)}
+.reference .player{background:transparent;border-color:transparent;padding:0}
+.reference .ptxt{font:italic 400 15px var(--serif);color:var(--muted)}
+.scale{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.opt{--tone:var(--neutral);--amt:70%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 4px 10px;border-radius:7px;cursor:pointer;
+  border:1px solid color-mix(in srgb,var(--tone) 45%,var(--rule));background:color-mix(in srgb,var(--tone) 7%,var(--surface))}
+.opt .v{font:500 18px var(--mono)} .opt .t{font-size:12px;line-height:1.25;color:var(--muted);text-align:center}
+.opt[data-v="-3"],.opt[data-v="-2"],.opt[data-v="-1"]{--tone:var(--a)} .opt[data-v="1"],.opt[data-v="2"],.opt[data-v="3"]{--tone:var(--b)}
+.opt[data-v="-3"],.opt[data-v="3"]{--amt:100%} .opt[data-v="-2"],.opt[data-v="2"]{--amt:78%} .opt[data-v="-1"],.opt[data-v="1"]{--amt:52%}
+.opt:hover:not(:disabled){background:color-mix(in srgb,var(--tone) 16%,var(--surface))}
+.opt.on{background:color-mix(in srgb,var(--tone) var(--amt),var(--surface));border-color:var(--tone)}
+.opt.on .v,.opt.on .t{color:var(--on-accent)}
+.opt[data-v="-1"].on .v,.opt[data-v="-1"].on .t,.opt[data-v="1"].on .v,.opt[data-v="1"].on .t{color:var(--ink)}
+.opt:disabled{opacity:.4;cursor:not-allowed}
+.hint{font-size:14px;color:var(--warn);min-height:22px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.choices{display:flex;gap:10px} .choices .btn{min-width:64px;align-self:auto}
+.code{font:500 20px var(--mono);letter-spacing:.06em;color:var(--ink)}
+@media (max-width:720px){ .pair{grid-template-columns:1fr} .opt .t{display:none} .script{font-size:22px} h1{font-size:25px} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<header class="top"><b>Voice comparison study</b><span class="step" id="step"></span></header>
+<div class="meter"><i id="meter"></i></div>
+<main id="app"><p>Loading…</p></main>
+<script src="config.js"></script>
+<script>
+(() => {
+const CFG = window.STUDY_CONFIG || {};
+const app = document.getElementById("app");
+const q = new URLSearchParams(location.search);
+const PID = q.get("PROLIFIC_PID") || "", SESSION = q.get("SESSION_ID") || "", PSTUDY = q.get("STUDY_ID") || "";
+const PREVIEW = !PID;
+const LABELS = {"-3":"A is much better","-2":"A is better","-1":"A is slightly better","0":"About the same","1":"B is slightly better","2":"B is better","3":"B is much better"};
+const sign = v => v > 0 ? "+" + v : v < 0 ? "−" + (-v) : "0";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+                set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+let study = null, S = null;
+const pid = PID || (store.get("vcs-preview-id") || (() => { const id = "preview-" + Math.random().toString(36).slice(2, 10); store.set("vcs-preview-id", id); return id; })());
+const KEY = () => `vcs:${study.study_id}:${pid}`;
+const save = () => store.set(KEY(), S);
+
+/* ---------- data upload ---------- */
+function send(rows){
+  if (!CFG.scriptUrl) return Promise.resolve();
+  const body = JSON.stringify({rows: rows.map(r => ({study_id: study.study_id, pid, session_id: SESSION, prolific_study_id: PSTUDY,
+    list: S.list, user_agent: navigator.userAgent, client_time: new Date().toISOString(), ...r}))});
+  return fetch(CFG.scriptUrl, {method: "POST", mode: "no-cors", headers: {"Content-Type": "text/plain;charset=utf-8"}, body, keepalive: body.length < 60000})
+    .catch(() => { S.unsent = (S.unsent || []).concat(rows); save(); });
+}
+function flushUnsent(){ if (S.unsent && S.unsent.length) { const r = S.unsent; S.unsent = []; save(); send(r); } }
+async function assignList(){
+  const fallback = 1 + ([...pid].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 4);
+  if (!CFG.scriptUrl) return fallback;
+  try {
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 7000);
+    const r = await fetch(`${CFG.scriptUrl}?action=assign&pid=${encodeURIComponent(pid)}&study=${encodeURIComponent(study.study_id)}`, {signal: ctl.signal});
+    clearTimeout(t); const j = await r.json();
+    return [1, 2, 3, 4].includes(Number(j.list)) ? Number(j.list) : fallback;
+  } catch { return fallback; }
+}
+
+/* ---------- audio player ---------- */
+let current = null;
+function player(el, src, onEnded){
+  const audio = new Audio(); audio.preload = "auto"; audio.src = src;
+  const btn = el.querySelector(".play"), fill = el.querySelector(".bar i"), heard = el.querySelector(".heard"), word = btn.querySelector(".w");
+  const base = word.textContent; let plays = 0, ended = 0;
+  const stop = () => { audio.pause(); audio.currentTime = 0; el.classList.remove("playing"); word.textContent = base; fill.style.width = "0"; };
+  btn.addEventListener("click", () => {
+    if (!audio.paused) { stop(); return; }
+    if (current && current !== api) current.stop();
+    current = api; audio.currentTime = 0; audio.play().then(() => { plays++; }).catch(() => {});
+    el.classList.add("playing"); word.textContent = "Stop";
+  });
+  audio.addEventListener("timeupdate", () => { if (audio.duration) fill.style.width = (100 * audio.currentTime / audio.duration) + "%"; });
+  audio.addEventListener("ended", () => { el.classList.remove("playing"); word.textContent = base; fill.style.width = "100%"; ended++;
+    if (heard) { heard.textContent = "Played ✓"; heard.classList.add("yes"); } onEnded && onEnded(); });
+  const api = { stop, get plays(){ return plays; }, get ended(){ return ended; } };
+  return api;
+}
+const playerHTML = (cls, word, withHeard = true) =>
+  `<div class="player ${cls}"><button class="play" type="button"><span class="glyph"></span><span class="w">${word}</span></button><div class="bar"><i></i></div>${withHeard ? '<span class="heard">Not played yet</span>' : "<span></span>"}</div>`;
+
+/* ---------- screens ---------- */
+function progress(){
+  const nMain = S.order ? S.order.length : 22;
+  const total = 4 + study.practice.length + nMain;
+  const pos = {consent: 0, volume: 1, headphone: 2, instructions: 3, practice: 4 + (S.practiceIndex || 0), main: 4 + study.practice.length + (S.mainIndex || 0), done: total, screenout: total}[S.screen] || 0;
+  document.getElementById("meter").style.width = (100 * pos / total) + "%";
+  document.getElementById("step").textContent = S.screen === "main" ? `Question ${S.mainIndex + 1} of ${nMain}` :
+    S.screen === "practice" ? `Practice ${S.practiceIndex + 1} of ${study.practice.length}` : "";
+}
+function render(){ if (current) current.stop(); current = null; progress(); ({consent, volume, headphone, instructions, practice, main: mainTrial, done, screenout})[S.screen](); window.scrollTo(0, 0); }
+function go(screen){ S.screen = screen; save(); render(); }
+const previewBanner = () => PREVIEW ? `<div class="banner">Preview mode: no Prolific ID in the link.${CFG.scriptUrl ? " Answers are saved with a preview ID." : " The data backend is not configured, so answers are not saved."}</div>` : "";
+
+function consent(){
+  app.innerHTML = `${previewBanner()}
+  <h1>Which recording sounds better?</h1>
+  <div class="panel">
+    <p>You will hear short English sentences read by computer-generated voices. For each sentence you compare two versions, <strong>A</strong> and <strong>B</strong>, and say which sounds better overall.</p>
+    <ul>
+      <li>Takes about <strong>${esc(CFG.estimatedMinutes || 15)} minutes</strong>.</li>
+      <li><strong>Headphones are required</strong>, on a computer, in a quiet place. A short check at the start makes sure your headphones work.</li>
+      <li>We record your Prolific ID, your answers and response times. No other personal information is collected.</li>
+      <li>Taking part is voluntary. You can stop at any time by closing this page and returning the study on Prolific.</li>
+      <li>Answers are used only for research on speech synthesis and reported in aggregate.</li>
+    </ul>
+    ${CFG.researcherContact ? `<p>Questions: ${esc(CFG.researcherContact)}</p>` : ""}
+    <label class="check"><input type="checkbox" id="agree"><span>I am 18 or older, I have read the information above, and I agree to take part.</span></label>
+    <button class="btn" id="go" disabled>Continue</button>
+  </div>`;
+  const agree = document.getElementById("agree"), btn = document.getElementById("go");
+  agree.addEventListener("change", () => btn.disabled = !agree.checked);
+  btn.addEventListener("click", async () => {
+    btn.disabled = true; btn.textContent = "Starting…";
+    if (!S.list) S.list = await assignList();
+    send([{phase: "consent", extra: JSON.stringify({preview: PREVIEW, screen: `${screen.width}x${screen.height}`})}]);
+    go("volume");
+  });
+}
+function volume(){
+  app.innerHTML = `<h2>Set your volume</h2>
+  <div class="panel">
+    <p>Put on your headphones and play this sample. Adjust your volume until the voice is clear and comfortable. <strong>Please don't change the volume after this step.</strong></p>
+    ${playerHTML("", "Play", false)}
+    <button class="btn" id="go" disabled>The volume is comfortable</button>
+  </div>`;
+  const btn = document.getElementById("go");
+  player(app.querySelector(".player"), study.calibration, () => btn.disabled = false);
+  btn.addEventListener("click", () => { S.hp = {i: 0, answers: []}; go("headphone"); });
+}
+function headphone(){
+  const hp = S.hp, t = study.headphone[hp.i];
+  app.innerHTML = `<h2>Headphone check ${hp.i + 1} of ${study.headphone.length}</h2>
+  <div class="panel">
+    <p>You will hear <strong>three bursts of noise</strong>. One of them has a faint tone hidden inside it. It is only audible with headphones. <strong>Which burst contains the tone?</strong></p>
+    ${playerHTML("", "Play", false)}
+    <div class="choices" id="ch">${[1, 2, 3].map(n => `<button class="btn ghost" data-n="${n}" disabled>${n}</button>`).join("")}</div>
+    <p class="hint" id="hint">Play the sound once to answer. You can replay it.</p>
+  </div>`;
+  const choices = [...app.querySelectorAll("#ch button")];
+  player(app.querySelector(".player"), t.file, () => { choices.forEach(b => b.disabled = false); document.getElementById("hint").textContent = ""; });
+  choices.forEach(b => b.addEventListener("click", () => {
+    const n = Number(b.dataset.n);
+    hp.answers.push(n); send([{phase: "headphone", trial_index: hp.i + 1, hp_answer: n, hp_correct: n === t.answer ? 1 : 0}]);
+    hp.i++;
+    if (hp.i < study.headphone.length) { save(); render(); return; }
+    const score = hp.answers.filter((a, i) => a === study.headphone[i].answer).length;
+    hp.score = score; send([{phase: "headphone_summary", hp_score: score}]);
+    go(score >= study.headphone_pass ? "instructions" : "screenout");
+  }));
+}
+function screenout(){
+  const link = CFG.screenoutCode ? `https://app.prolific.com/submissions/complete?cc=${encodeURIComponent(CFG.screenoutCode)}` : "";
+  app.innerHTML = `<h2>Thank you for your time</h2>
+  <div class="panel">
+    <p>This study needs headphones that play the left and right channels separately, and the check did not confirm that for your setup. Unfortunately you can't continue.</p>
+    ${link ? `<a class="btn" href="${link}">Return to Prolific</a>` : `<p><strong>Please return this study on Prolific</strong> (use "Return submission") so it doesn't count against you.</p>`}
+  </div>`;
+}
+function instructions(){
+  app.innerHTML = `<h2>How to answer</h2>
+  <div class="panel">
+    <p>Each question shows one sentence. Two computer voices, <strong>A</strong> and <strong>B</strong>, read that sentence while imitating the speaker in the <strong>reference</strong> recording.</p>
+    <ol>
+      <li>Listen to the reference once, to learn what the speaker sounds like.</li>
+      <li>Play <strong>A</strong> and <strong>B</strong> all the way through. You can replay them as often as you like.</li>
+      <li>Decide which one sounds better <strong>overall</strong>: more natural and fluent, clearer, the words read correctly, and closer to the reference speaker's voice.</li>
+    </ol>
+    <p>Background noise or room sound that is already in the reference is not a flaw. Glitches, buzzing, slurred or wrong words, and odd rhythm are. If you can't hear a difference, choose <strong>About the same</strong>.</p>
+    <p>A few questions are attention checks with a written instruction. Please read each screen carefully.</p>
+    <p>First, ${study.practice.length} practice questions.</p>
+    <button class="btn" id="go">Start practice</button>
+  </div>`;
+  document.getElementById("go").addEventListener("click", () => { S.practiceIndex = 0; go("practice"); });
+}
+function trialView(t, opts){
+  const item = t.check ? null : (opts.practice ? t : {...study.items[t.item], ...t});
+  app.innerHTML = `
+  <div class="panel">
+    ${t.check ? `<span class="label">Attention check</span><p class="script">Please select “${LABELS[t.check]}” for this question.</p>` : `
+    <span class="label">${opts.practice ? "Practice" : "Sentence"}</span>
+    <p class="script">${esc(item.text)}</p>
+    <div class="reference">
+      ${playerHTML("", "Reference", false)}
+      <span class="ptxt">Reference speaker saying: “${esc(item.prompt_text)}”</span>
+    </div>
+    <div class="pair">${playerHTML("a", "Play A")}${playerHTML("b", "Play B")}</div>`}
+    <div>
+      <p style="margin-bottom:8px"><strong>Compared with A, how does B sound overall?</strong></p>
+      <div class="scale" id="scale">${[-3, -2, -1, 0, 1, 2, 3].map(v => `<button type="button" class="opt" data-v="${v}" ${t.check ? "" : "disabled"}><span class="v">${sign(v)}</span><span class="t">${LABELS[v]}</span></button>`).join("")}</div>
+    </div>
+    <div class="row"><span class="hint" id="hint">${t.check ? "" : "Play A and B to the end to answer."}</span><button class="btn" id="next" disabled>Next</button></div>
+  </div>`;
+  const opts7 = [...app.querySelectorAll(".opt")], next = document.getElementById("next"), hint = document.getElementById("hint");
+  let choice = null, ready = !!t.check, readyAt = t.check ? performance.now() : null, pa = null, pb = null, pr = null;
+  const unlock = () => { if (ready || !pa || !pb || !pa.ended || !pb.ended) return; ready = true; readyAt = performance.now(); opts7.forEach(o => o.disabled = false); hint.textContent = ""; };
+  if (!t.check) {
+    const players = app.querySelectorAll(".player");
+    pr = player(players[0], item.ref); pa = player(players[1], t.a, unlock); pb = player(players[2], t.b, unlock);
+  }
+  opts7.forEach(o => o.addEventListener("click", () => {
+    if (!ready) return; choice = Number(o.dataset.v);
+    opts7.forEach(x => x.classList.toggle("on", x === o)); next.disabled = false;
+  }));
+  next.addEventListener("click", () => {
+    if (choice === null) return;
+    opts.onAnswer({score: choice, rt_ms: Math.round(performance.now() - readyAt), plays_a: pa ? pa.plays : "", plays_b: pb ? pb.plays : "", plays_ref: pr ? pr.plays : ""});
+  });
+}
+function practice(){
+  const t = study.practice[S.practiceIndex];
+  trialView(t, {practice: true, onAnswer: r => {
+    send([{phase: "practice", trial_index: S.practiceIndex + 1, item: t.item, a_file: t.a, b_file: t.b, ...r}]);
+    S.practiceIndex++;
+    if (S.practiceIndex < study.practice.length) { save(); render(); return; }
+    S.mainIndex = 0; S.screen = "main"; save();
+    app.innerHTML = `<h2>Practice done</h2><div class="panel"><p>The real questions start now: ${S.order.length} in total, including ${S.order.filter(x => x.check).length} attention checks. Take a short break if you need one.</p><button class="btn" id="go">Start</button></div>`;
+    progress();
+    document.getElementById("go").addEventListener("click", render);
+  }});
+}
+function mainTrial(){
+  const t = S.order[S.mainIndex];
+  trialView(t, {practice: false, onAnswer: r => {
+    const row = t.check ? {phase: "attention", trial_index: S.mainIndex + 1, attention_expected: t.check, ...r}
+                        : {phase: "main", trial_index: S.mainIndex + 1, item: t.item, a_file: t.a, b_file: t.b, ...r};
+    S.rows = (S.rows || []).concat([row]); send([row]);
+    S.mainIndex++;
+    if (S.mainIndex < S.order.length) { save(); render(); } else go("done");
+  }});
+}
+async function done(){
+  const link = CFG.completionCode ? `https://app.prolific.com/submissions/complete?cc=${encodeURIComponent(CFG.completionCode)}` : "";
+  app.innerHTML = `<h2>Saving your answers…</h2><div class="panel"><p>Please keep this page open for a moment.</p></div>`;
+  flushUnsent();
+  if (!S.finalSent) { await send([{phase: "final", extra: JSON.stringify(S.rows || [])}]); S.finalSent = true; save(); }
+  app.innerHTML = `<h2>Thank you, you're done</h2>
+  <div class="panel">
+    ${link ? `<p>Click the button to confirm your completion on Prolific. If it doesn't work, enter this code on Prolific:</p><p class="code">${esc(CFG.completionCode)}</p><a class="btn" href="${link}">Complete on Prolific</a>`
+           : `<p>Your answers have been recorded${PREVIEW ? " (preview)" : ""}.</p>`}
+  </div>`;
+  if (link && !PREVIEW) setTimeout(() => { location.href = link; }, 2500);
+}
+
+/* ---------- boot ---------- */
+fetch("study.json").then(r => r.json()).then(j => {
+  study = j;
+  S = store.get(KEY());
+  if (!S) {
+    S = {screen: "consent", list: null, order: null};
+  }
+  const ensureOrder = () => {
+    if (S.order || !S.list) return;
+    const tr = study.lists[String(S.list)].map(x => ({...x}));
+    for (let i = tr.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [tr[i], tr[k]] = [tr[k], tr[i]]; }
+    const p1 = 4 + Math.floor(Math.random() * 6), p2 = 13 + Math.floor(Math.random() * 6);
+    tr.splice(p2, 0, {check: "1"}); tr.splice(p1, 0, {check: "-3"});
+    S.order = tr; save();   // fixed once per participant: shuffled list + two attention checks
+  };
+  const origGo = go;
+  go = screen => { ensureOrder(); origGo(screen); };
+  ensureOrder();
+  if (S.screen !== "consent" && !S.order) S.screen = "consent";
+  flushUnsent();
+  render();
+}).catch(() => { app.innerHTML = `<div class="panel"><p>The study files could not be loaded. Please reload the page.</p></div>`; });
+})();
+</script>
+</body>
+</html>
