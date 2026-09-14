@@ -290,7 +290,7 @@ async function done(){
   const link = CFG.completionCode ? `https://app.prolific.com/submissions/complete?cc=${encodeURIComponent(CFG.completionCode)}` : "";
   app.innerHTML = `<h2>Saving your answers…</h2><div class="panel"><p>Please keep this page open for a moment.</p></div>`;
   flushUnsent();
-  if (!S.finalSent) { await send([{phase: "final", extra: JSON.stringify(S.rows || [])}]); S.finalSent = true; save(); }
+  if (!S.finalSent) { const finalSave = send([{phase: "final", extra: JSON.stringify(S.rows || [])}]); await Promise.race([finalSave, new Promise(resolve => setTimeout(resolve, 5000))]); S.finalSent = true; save(); }
   app.innerHTML = `<h2>Thank you, you're done</h2>
   <div class="panel">
     ${link ? `<p>Click the button to confirm your completion on Prolific. If it doesn't work, enter this code on Prolific:</p><p class="code">${esc(CFG.completionCode)}</p><a class="btn" href="${link}">Complete on Prolific</a>`
